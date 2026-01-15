@@ -72,8 +72,6 @@ const CartSchema = new Schema<ICart>(
   }
 );
 
-// Index for faster user lookups
-CartSchema.index({ userId: 1 });
 
 export const Cart = mongoose.model<ICart>('Cart', CartSchema);
 

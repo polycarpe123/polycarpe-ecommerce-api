@@ -33,8 +33,6 @@ const CategorySchema = new Schema<ICategory>(
   }
 );
 
-// Index for faster name lookups
-CategorySchema.index({ name: 1 });
 
 export const Category = mongoose.model<ICategory>('Category', CategorySchema);
 

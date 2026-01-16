@@ -105,7 +105,7 @@ const startServer = async () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Base URL: http://localhost:${PORT}`);
-      console.log(`https://polycarpe-ecommerce-api.onrender.com/`);
+      console.log(`https://polycarpe-ecommerce-api.onrender.com/api-docs`);
       console.log('\n');
       console.log('Available endpoints:');
       console.log('  Auth:       /api/auth');

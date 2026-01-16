@@ -22,7 +22,7 @@ const options: swaggerJsdoc.Options = {
         description: 'Development server'
       },
       {
-        url: 'https://api.production.com',
+        url: 'https://polycarpe-ecommerce-api.onrender.com/',
         description: 'Production server'
       }
     ],
@@ -433,7 +433,7 @@ const options: swaggerJsdoc.Options = {
       }
     ]
   },
-  apis: ['./src/routes/*.ts'] // Path to the API routes
+  apis: ['./src/routes/*.ts'] 
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

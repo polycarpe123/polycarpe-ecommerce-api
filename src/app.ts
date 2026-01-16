@@ -41,10 +41,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// ============================================
 // Swagger Documentation
-// ============================================
-
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
@@ -57,10 +54,7 @@ app.get('/api-docs.json', (req: Request, res: Response) => {
   res.send(swaggerSpec);
 });
 
-// ============================================
 // Routes
-// ============================================
-
 app.get('/', (req: Request, res: Response) => {
   res.status(200).json({
     success: true,
@@ -111,7 +105,7 @@ const startServer = async () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`Base URL: http://localhost:${PORT}`);
-      console.log(`API Docs: http://localhost:${PORT}/api-docs`);
+      console.log(`https://polycarpe-ecommerce-api.onrender.com/`);
       console.log('\n');
       console.log('Available endpoints:');
       console.log('  Auth:       /api/auth');

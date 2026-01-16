@@ -42,6 +42,23 @@ export const getCart = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+export const createCart = async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.userId) {
+      res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+      return;
+    }}
+    catch (error) {
+    console.error('Create cart error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to create cart'
+    });
+}}
+
 // Add item to cart (PROTECTED)
 export const addToCart = async (req: Request, res: Response): Promise<void> => {
   try {

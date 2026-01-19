@@ -16,8 +16,6 @@ import adminOrderRoutes from './routes/adminOrderRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import path from 'path';
 
-const __dirname = process.cwd();
-
 dotenv.config();
 
 const app: Application = express();

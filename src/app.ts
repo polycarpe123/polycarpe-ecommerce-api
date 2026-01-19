@@ -13,6 +13,11 @@ import cartRoutes from './routes/cartRoutes';
 import orderRoutes from './routes/orderRoutes';
 import adminOrderRoutes from './routes/adminOrderRoutes';
 
+import uploadRoutes from './routes/uploadRoutes';
+import path from 'path';
+
+const __dirname = process.cwd();
+
 dotenv.config();
 
 const app: Application = express();
@@ -57,6 +62,8 @@ app.get('/api-docs.json', (req: Request, res: Response) => {
   res.send(swaggerSpec);
 });
 
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.get('/', (req: Request, res: Response) => {
   res.status(200).json({
@@ -81,6 +88,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin/orders', adminOrderRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

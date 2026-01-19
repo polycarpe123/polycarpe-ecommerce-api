@@ -2,12 +2,14 @@ import { Request, Response } from 'express';
 import { Order, OrderStatus, IOrderItem } from '../models/order.js';
 import { Cart } from '../models/cart.js';
 import { Product } from '../models/product.js';
+import { User } from '../models/user.js';
 import mongoose from 'mongoose';
+import emailService from '../services/emailService.js';
 
-// Customer: Create order from cart
+// Customer: Create order from cart - WITH EMAIL NOTIFICATION
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.userId; // From auth middleware
+    const userId = req.userId;
     const { shippingAddress, notes } = req.body;
 
     // Find user's cart
@@ -77,7 +79,6 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         }
       );
 
-      // Check if product is now out of stock
       const updatedProduct = await Product.findById(item.productId);
       if (updatedProduct && updatedProduct.quantity === 0) {
         updatedProduct.inStock = false;
@@ -87,6 +88,22 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
 
     // Clear the cart
     await Cart.findByIdAndDelete(cart._id);
+
+    // Get user details for email
+    const user = await User.findById(userId);
+    if (user) {
+      // Send order confirmation email (non-blocking)
+      emailService.sendOrderConfirmation(
+        user.email,
+        user.firstName,
+        newOrder._id.toString(),
+        newOrder.total,
+        newOrder.items
+      ).catch(err => {
+        console.error('Failed to send order confirmation email:', err);
+        // Email failure doesn't stop order creation
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -264,7 +281,7 @@ export const getAllOrders = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-// Admin: Update order status
+// Admin: Update order status - WITH EMAIL NOTIFICATION
 export const updateOrderStatus = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -286,7 +303,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const order = await Order.findById(id);
+    const order = await Order.findById(id).populate('userId');
 
     if (!order) {
       res.status(404).json({
@@ -320,6 +337,20 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
 
     order.status = status;
     await order.save();
+
+    // Send status update email (non-blocking)
+    const user = order.userId as any;
+    if (user && user.email) {
+      emailService.sendOrderStatusUpdate(
+        user.email,
+        user.firstName,
+        order._id.toString(),
+        status
+      ).catch(err => {
+        console.error('Failed to send order status update email:', err);
+        // Email failure doesn't stop status update
+      });
+    }
 
     res.status(200).json({
       success: true,

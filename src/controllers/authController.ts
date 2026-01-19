@@ -1,15 +1,10 @@
-declare module 'express-serve-static-core' {
-  interface Request {
-    userId?: string;
-    user?: any;
-  }
-}
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { User, IUser, UserResponse, RegisterDto, LoginDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto, UpdateUserDto, UserRole } from '../models/user';
+import { User, IUser, UserResponse, RegisterDto, LoginDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto, UpdateUserDto, UserRole } from '../models/user.js';
 import { TokenBlacklist } from '../models/TokenBlackList';
 import { generateToken } from '../utility/jwt';
+import emailService from '../services/emailService';
 
 // Helper function to exclude password from response
 const excludePassword = (user: IUser): UserResponse => {
@@ -23,7 +18,7 @@ const excludePassword = (user: IUser): UserResponse => {
   };
 };
 
-// Register
+// Register - WITH EMAIL NOTIFICATION
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password, firstName, lastName, role }: RegisterDto = req.body;
@@ -40,7 +35,6 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Only allow customer registration by default
-    // Admin must create vendor/admin accounts
     const userRole = role && role === UserRole.CUSTOMER ? role : UserRole.CUSTOMER;
 
     const newUser = await User.create({
@@ -55,6 +49,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       userId: newUser._id.toString(),
       email: newUser.email,
       role: newUser.role
+    });
+
+    // Send welcome email (non-blocking - won't fail registration if email fails)
+    emailService.sendWelcomeEmail(newUser.email, newUser.firstName).catch(err => {
+      console.error('Failed to send welcome email:', err);
+      // Email failure doesn't stop registration
     });
 
     res.status(201).json({
@@ -123,7 +123,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 // Get Profile (authenticated user)
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.userId; // Set by authenticate middleware
+    const userId = req.userId;
 
     const user = await User.findById(userId).select('-password -resetToken -resetTokenExpiry');
     if (!user) {
@@ -153,10 +153,9 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     const token = req.headers.authorization?.split(' ')[1];
     
     if (token) {
-      // Add token to blacklist
       await TokenBlacklist.create({
         token,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from now
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
       });
     }
 
@@ -188,7 +187,6 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Verify current password
     const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
     if (!isPasswordValid) {
       res.status(401).json({
@@ -198,7 +196,6 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Hash and update new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
@@ -216,14 +213,14 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// Forgot Password
+// Forgot Password - WITH EMAIL NOTIFICATION
 export const forgotPassword = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email }: ForgotPasswordDto = req.body;
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      // Don't reveal if email exists or not
+      // Don't reveal if email exists
       res.status(200).json({
         success: true,
         message: 'If the email exists, a password reset link has been sent'
@@ -236,19 +233,17 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
 
     user.resetToken = hashedToken;
-    user.resetTokenExpiry = Date.now() + 60 * 60 * 1000; // 1 hour from now
+    user.resetTokenExpiry = Date.now() + 60 * 60 * 1000; // 1 hour
     await user.save();
 
-    // In production, send email with reset link
-    // For now, just return the token (this is unnecessary in production!)
-    console.log('Reset Token:', resetToken);
-    console.log('Reset Link:', `http://localhost:3000/reset-password?token=${resetToken}`);
+    // Send password reset email (non-blocking)
+    emailService.sendPasswordResetEmail(user.email, user.firstName, resetToken).catch(err => {
+      console.error('Failed to send password reset email:', err);
+    });
 
     res.status(200).json({
       success: true,
-      message: 'A password reset link has been sent',
-    
-      resetToken: resetToken 
+      message: 'If the email exists, a password reset link has been sent'
     });
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -264,12 +259,11 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
   try {
     const { token, newPassword }: ResetPasswordDto = req.body;
 
-    // Hash the token to compare with stored hash
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
       resetToken: hashedToken,
-      resetTokenExpiry: { $gt: Date.now() } // Token not expired
+      resetTokenExpiry: { $gt: Date.now() }
     });
 
     if (!user) {
@@ -280,7 +274,6 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Update password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     user.resetToken = undefined;
@@ -362,7 +355,6 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Check if email is being changed and if it already exists
     if (email && email.toLowerCase() !== user.email) {
       const existingUser = await User.findOne({ email: email.toLowerCase() });
       if (existingUser) {
@@ -400,7 +392,6 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
   try {
     const { id } = req.params;
 
-    // Prevent admin from deleting themselves
     if (req.userId === id) {
       res.status(400).json({
         success: false,

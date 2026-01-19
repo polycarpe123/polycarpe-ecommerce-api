@@ -37,30 +37,6 @@ const router = Router();
  */
 router.get('/', authenticate, getCart);
 
-/**
- * @swagger
- * /api/cart:
- *   get:
- *     summary: Get user's cart
- *     tags: [Cart]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User's cart
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 data:
- *                   $ref: '#/components/schemas/Cart'
- *       401:
- *         $ref: '#/components/responses/UnauthorizedError'
- */
-router.post('/', authenticate, createCart);
 
 /**
  * @swagger

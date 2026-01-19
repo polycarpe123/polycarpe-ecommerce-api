@@ -10,6 +10,8 @@ import authRoutes from './routes/authRoutes';
 import categoryRoutes from './routes/categoryRoutes';
 import productRoutes from './routes/productRoutes';
 import cartRoutes from './routes/cartRoutes';
+import orderRoutes from './routes/orderRoutes';
+import adminOrderRoutes from './routes/adminOrderRoutes';
 
 dotenv.config();
 
@@ -20,6 +22,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
 
 // CORS
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -76,6 +79,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/admin/orders', adminOrderRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

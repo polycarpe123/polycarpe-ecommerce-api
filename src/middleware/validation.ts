@@ -256,3 +256,62 @@ export const validateResetPassword = (req: Request, res: Response, next: NextFun
 
   next();
 };
+
+export const validateCreateOrder = (req: Request, res: Response, next: NextFunction): void => {
+  const { shippingAddress } = req.body;
+
+  if (shippingAddress && typeof shippingAddress !== 'string') {
+    res.status(400).json({
+      success: false,
+      error: 'Shipping address must be a string'
+    });
+    return;
+  }
+
+  if (shippingAddress && shippingAddress.trim().length < 10) {
+    res.status(400).json({
+      success: false,
+      error: 'Shipping address must be at least 10 characters'
+    });
+    return;
+  }
+
+  next();
+};
+
+export const validateOrderStatus = (req: Request, res: Response, next: NextFunction): void => {
+  const { status } = req.body;
+
+  if (!status) {
+    res.status(400).json({
+      success: false,
+      error: 'Status is required'
+    });
+    return;
+  }
+
+  const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+  if (!validStatuses.includes(status)) {
+    res.status(400).json({
+      success: false,
+      error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+    });
+    return;
+  }
+
+  next();
+};
+
+export const validateMongoId = (req: Request, res: Response, next: NextFunction): void => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).json({
+      success: false,
+      error: 'Invalid ID format'
+    });
+    return;
+  }
+
+  next();
+};

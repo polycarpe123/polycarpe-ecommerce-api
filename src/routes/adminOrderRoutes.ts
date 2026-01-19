@@ -2,19 +2,15 @@ import { Router } from 'express';
 import {
   getAllOrders,
   updateOrderStatus
-} from '../controllers/orderController';
-import { authenticate } from '../middleware/auth';
-import { requireAdmin } from '../middleware/accessControl';
+} from '../controllers/orderController.js';
+import { authenticate } from '../middleware/auth.js';
+import { requireAdmin } from '../middleware/accessControl.js';
 import {
   validateOrderStatus,
   validateMongoId
-} from '../middleware/validation';
+} from '../middleware/validation.js';
 
 const router = Router();
-
-// Admin routes (Protected + Admin only)
-router.get('/', authenticate, requireAdmin, getAllOrders);
-router.patch('/:id/status', authenticate, requireAdmin, validateMongoId, validateOrderStatus, updateOrderStatus);
 
 /**
  * @swagger

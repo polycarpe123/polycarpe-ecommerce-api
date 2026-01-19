@@ -11,6 +11,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "type": "module",
   "dependencies": {
     "@types/mongoose": "^5.11.96",
     "bcrypt": "^5.1.1",

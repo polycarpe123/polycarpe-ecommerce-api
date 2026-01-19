@@ -128,4 +128,5 @@ router.delete('/items/:itemId', authenticate, validateUUID, removeFromCart);
  */
 router.delete('/', authenticate, clearCart);
 
+
 export default router;

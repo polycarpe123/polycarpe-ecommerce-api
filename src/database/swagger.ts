@@ -436,4 +436,94 @@ const options: swaggerJsdoc.Options = {
   apis: ['./src/routes/*.ts'] 
 };
 
+//order management SWAGGER implementation
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     OrderItem:
+ *       type: object
+ *       required:
+ *         - productId
+ *         - productName
+ *         - price
+ *         - quantity
+ *         - subtotal
+ *       properties:
+ *         productId:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *         productName:
+ *           type: string
+ *           example: "Laptop Pro 15"
+ *         price:
+ *           type: number
+ *           minimum: 0
+ *           example: 1299.99
+ *         quantity:
+ *           type: integer
+ *           minimum: 1
+ *           example: 2
+ *         subtotal:
+ *           type: number
+ *           minimum: 0
+ *           example: 2599.98
+ *
+ *     Order:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *           example: "507f1f77bcf86cd799439011"
+ *         userId:
+ *           type: string
+ *           example: "507f191e810c19729de860ea"
+ *         items:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/OrderItem'
+ *         total:
+ *           type: number
+ *           minimum: 0
+ *           example: 2599.98
+ *         status:
+ *           type: string
+ *           enum: [pending, confirmed, shipped, delivered, cancelled]
+ *           example: pending
+ *         shippingAddress:
+ *           type: string
+ *           example: "123 Main St, Apt 4B, New York, NY 10001"
+ *         notes:
+ *           type: string
+ *           example: "Please leave package at front door"
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *
+ *     CreateOrderRequest:
+ *       type: object
+ *       properties:
+ *         shippingAddress:
+ *           type: string
+ *           minLength: 10
+ *           example: "123 Main St, Apt 4B, New York, NY 10001"
+ *         notes:
+ *           type: string
+ *           example: "Please leave package at front door"
+ *
+ *     UpdateOrderStatusRequest:
+ *       type: object
+ *       required:
+ *         - status
+ *       properties:
+ *         status:
+ *           type: string
+ *           enum: [pending, confirmed, shipped, delivered, cancelled]
+ *           example: confirmed
+ */
+
 export const swaggerSpec = swaggerJsdoc(options);

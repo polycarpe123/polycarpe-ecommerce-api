@@ -26,10 +26,10 @@ createUploadDirs();
 // Configure storage
 const storage: StorageEngine = multer.diskStorage({
   destination: (req: Request, file: Express.Multer.File, cb) => {
-    let folder = 'uploads';
+    let folder = uploadDir;
     
     // Determine folder based on file field name
-    if (file.fieldname === 'profileImage') {
+    if (file.fieldname === 'file' || file.fieldname === 'profileImage') {
       folder = path.join(uploadDir, 'profiles');
     } else if (file.fieldname === 'productImage') {
       folder = path.join(uploadDir, 'products');
@@ -40,7 +40,7 @@ const storage: StorageEngine = multer.diskStorage({
     cb(null, folder);
   },
   filename: (req: Request, file: Express.Multer.File, cb) => {
-    // Create unique filename: timestamp-randomstring-originalname
+    // Create unique filename
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
     const ext = path.extname(file.originalname);
     const name = path.basename(file.originalname, ext).replace(/\s+/g, '-');
@@ -87,18 +87,18 @@ const documentFileFilter = (
 // Max file size (5MB default)
 const maxFileSize = Number(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024;
 
-// Multer configurations
+// Multer configurations - ALL use 'file' as field name for consistency
 export const uploadProfileImage = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: { fileSize: maxFileSize }
-}).single('file');
+}).single('file'); // ← Changed to 'file'
 
 export const uploadProductImage = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: { fileSize: maxFileSize }
-}).single('file');
+}).single('file'); // ← Changed to 'file'
 
 export const uploadMultipleProductImages = multer({
   storage,
@@ -111,3 +111,31 @@ export const uploadDocument = multer({
   fileFilter: documentFileFilter,
   limits: { fileSize: maxFileSize }
 }).single('file');
+
+// Error handler
+export const handleUploadError = (err: any, req: any, res: any, next: any) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        error: `File too large. Maximum size is ${maxFileSize / (1024 * 1024)}MB`
+      });
+    }
+    if (err.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        error: 'Too many files'
+      });
+    }
+    return res.status(400).json({
+      success: false,
+      error: err.message
+    });
+  } else if (err) {
+    return res.status(400).json({
+      success: false,
+      error: err.message || 'File upload failed'
+    });
+  }
+  next();
+};

@@ -12,6 +12,7 @@ export interface IUser extends Document {
   firstName: string;
   lastName: string;
   role: UserRole; 
+  profileImage?: string;
   resetToken?: string;
   resetTokenExpiry?: number;
   createdAt: Date;
@@ -50,6 +51,9 @@ const UserSchema = new Schema<IUser>(
       enum: Object.values(UserRole),
       default: UserRole.CUSTOMER 
     },
+    profileImage: { 
+    type: String
+  },
     resetToken: {
       type: String,
       default: undefined

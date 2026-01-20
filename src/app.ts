@@ -6,6 +6,7 @@ import { swaggerSpec } from './database/swagger';
 import { connectDatabase } from './database/database';
 import emailService from './services/emailService';
 import cloudinaryRoutes from './routes/cloudinaryRoutes';
+import { testCloudinaryConnection } from './database/cloudinary';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
@@ -62,7 +63,7 @@ app.get('/api-docs.json', (req: Request, res: Response) => {
   res.send(swaggerSpec);
 });
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
 app.get('/', (req: Request, res: Response) => {
@@ -114,6 +115,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 const startServer = async () => {
   try {
     await connectDatabase();
+    await testCloudinaryConnection(); 
     
     app.listen(PORT, () => {
       

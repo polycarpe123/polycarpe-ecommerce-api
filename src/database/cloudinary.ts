@@ -3,25 +3,20 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Verify configuration
-const verifyCloudinaryConfig = () => {
-  if (!process.env.CLOUDINARY_CLOUD_NAME || 
-      !process.env.CLOUDINARY_API_KEY || 
-      !process.env.CLOUDINARY_API_SECRET) {
-    console.warn('⚠️  Cloudinary credentials not configured properly');
-    return false;
+// Test connection
+export const testCloudinaryConnection = async (): Promise<void> => {
+  try {
+    await cloudinary.api.ping();
+    console.log('✅ Cloudinary connected successfully');
+  } catch (error) {
+    console.error('❌ Cloudinary connection failed:', error);
   }
-  console.log('✅ Cloudinary configured successfully');
-  return true;
 };
-
-verifyCloudinaryConfig();
 
 export default cloudinary;

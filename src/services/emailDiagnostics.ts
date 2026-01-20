@@ -62,9 +62,9 @@ class EmailDiagnostics {
     console.log('\n3. Verifying SMTP Connection:');
     try {
       await transporter.verify();
-      console.log('   ✅ SMTP connection verified successfully');
+      console.log('   SMTP connection verified successfully');
     } catch (error: any) {
-      console.log('   ❌ SMTP connection failed:');
+      console.log('   SMTP connection failed:');
       console.log('   Error:', error.message);
       console.log('\n   Common issues:');
       console.log('   - Wrong password (use App Password for Gmail)');

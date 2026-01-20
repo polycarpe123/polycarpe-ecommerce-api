@@ -5,6 +5,7 @@ import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './database/swagger';
 import { connectDatabase } from './database/database';
 import emailService from './services/emailService';
+import cloudinaryRoutes from './routes/cloudinaryRoutes';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
@@ -76,7 +77,8 @@ app.get('/', (req: Request, res: Response) => {
       users: '/api/auth/users',
       categories: '/api/categories',
       products: '/api/products',
-      cart: '/api/cart'
+      cart: '/api/cart',
+      cloudinary: '/api/cloudinary'
     }
   });
 });
@@ -88,6 +90,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin/orders', adminOrderRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/cloudinary', cloudinaryRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

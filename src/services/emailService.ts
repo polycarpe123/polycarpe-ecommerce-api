@@ -18,8 +18,8 @@ class EmailService {
       const missing = required.filter(key => !process.env[key]);
       
       if (missing.length > 0) {
-        console.error('❌ Missing email environment variables:', missing.join(', '));
-        console.error('⚠️  Email service will NOT work. Please set these in your .env file');
+        console.error('Missing email environment variables:', missing.join(', '));
+        console.error('Email service will NOT work. Please set these in your .env file');
         return;
       }
 
@@ -38,25 +38,25 @@ class EmailService {
       // Verify connection
       this.verifyConnection();
     } catch (error) {
-      console.error('❌ Failed to initialize email transporter:', error);
+      console.error('Failed to initialize email transporter:', error);
     }
   }
 
   private async verifyConnection() {
     if (!this.transporter) {
-      console.error('❌ Email transporter not initialized');
+      console.error('Email transporter not initialized');
       return;
     }
 
     try {
       await this.transporter.verify();
       this.isReady = true;
-      console.log('✅ Email service is ready');
+      console.log('   Email service is ready');
       console.log(`   Host: ${process.env.EMAIL_HOST}`);
       console.log(`   Port: ${process.env.EMAIL_PORT}`);
       console.log(`   User: ${process.env.EMAIL_USER}`);
     } catch (error: any) {
-      console.error('❌ Email service verification failed:');
+      console.error('  Email service verification failed:');
       console.error('   Error:', error.message);
       
       // Provide helpful debugging info
@@ -87,11 +87,11 @@ class EmailService {
 
     try {
       const info = await this.transporter.sendMail(mailOptions);
-      console.log(`✅ Email sent successfully to ${mailOptions.to}`);
+      console.log(` Email sent successfully to ${mailOptions.to}`);
       console.log(`   Message ID: ${info.messageId}`);
       return info;
     } catch (error: any) {
-      console.error(`❌ Failed to send email to ${mailOptions.to}`);
+      console.error(`Failed to send email to ${mailOptions.to}`);
       console.error(`   Error: ${error.message}`);
       if (error.code) console.error(`   Code: ${error.code}`);
       if (error.response) console.error(`   Response: ${error.response}`);
@@ -285,7 +285,7 @@ class EmailService {
 
   // Send password reset email
   async sendPasswordResetEmail(to: string, firstName: string, resetToken: string): Promise<void> {
-    console.log(`📧 Attempting to send password reset to: ${to}`);
+    console.log(`Attempting to send password reset to: ${to}`);
     
     const resetUrl = `${process.env.FRONTEND_URL || 'https://polycarpe-ecommerce-api.onrender.com/api-docs'}/reset-password?token=${resetToken}`;
 

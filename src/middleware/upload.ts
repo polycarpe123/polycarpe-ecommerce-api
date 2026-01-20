@@ -104,10 +104,10 @@ export const uploadMultipleProductImages = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: { fileSize: maxFileSize }
-}).array('productImages', 5); // Max 5 images
+}).array('files', 5); // Max 5 images
 
 export const uploadDocument = multer({
   storage,
   fileFilter: documentFileFilter,
   limits: { fileSize: maxFileSize }
-}).single('document');
+}).single('file');

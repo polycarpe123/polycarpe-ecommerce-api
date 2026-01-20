@@ -27,6 +27,7 @@ const UserSchema = new Schema<IUser>(
       unique: true,
       lowercase: true,
       trim: true,
+      index: true,
       match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
     },
     password: {
@@ -67,6 +68,12 @@ const UserSchema = new Schema<IUser>(
     timestamps: true
   }
 );
+
+// Compound index for role-based queries
+UserSchema.index({ role: 1, createdAt: -1 });
+
+// Text index for search
+UserSchema.index({ firstName: 'text', lastName: 'text', email: 'text' });
 
 
 export const User = mongoose.model<IUser>('User', UserSchema);

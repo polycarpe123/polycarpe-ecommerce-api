@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "nodemon src/app.ts",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/app.js",
+    "seed:users": "ts-node src/scripts/seedUsers.ts",
+    "seed:products": "ts-node src/scripts/seedProducts.ts",
+    "seed:reviews": "ts-node src/scripts/seedReviews.ts",
+    "seed:all": "npm run seed:users && npm run seed:products && npm run seed:reviews"
   },
   "keywords": [],
   "author": "",

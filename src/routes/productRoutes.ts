@@ -17,9 +17,21 @@ const router = Router();
  * @swagger
  * /api/products:
  *   get:
- *     summary: Get all products with optional filters
+ *     summary: Get all products with pagination, filtering, sorting, and search
  *     tags: [Products]
  *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Items per page
  *       - in: query
  *         name: categoryId
  *         schema:
@@ -34,15 +46,34 @@ const router = Router();
  *         name: minPrice
  *         schema:
  *           type: number
- *         description: Minimum price filter
+ *         description: Minimum price
  *       - in: query
  *         name: maxPrice
  *         schema:
  *           type: number
- *         description: Maximum price filter
+ *         description: Maximum price
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search in name and description
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           enum: [name, price, createdAt, quantity]
+ *           default: createdAt
+ *         description: Sort by field
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
  *     responses:
  *       200:
- *         description: List of products
+ *         description: Products with pagination info
  *         content:
  *           application/json:
  *             schema:
@@ -50,8 +81,21 @@ const router = Router();
  *               properties:
  *                 success:
  *                   type: boolean
- *                 count:
- *                   type: number
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     totalProducts:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     hasNextPage:
+ *                       type: boolean
+ *                     hasPrevPage:
+ *                       type: boolean
  *                 data:
  *                   type: array
  *                   items:
@@ -179,5 +223,6 @@ router.delete('/:id', authenticate, requireVendorOrAdmin, validateUUID, deletePr
  *         description: This endpoint is only for vendors
  */
 router.get('/vendor/my-products', authenticate, getMyProducts);
+
 
 export default router;

@@ -7,6 +7,8 @@ import { connectDatabase } from './database/database';
 import emailService from './services/emailService';
 import cloudinaryRoutes from './routes/cloudinaryRoutes';
 import { testCloudinaryConnection } from './database/cloudinary';
+import productStatsRoutes from './routes/productStatsRoutes';
+import reviewRoutes from './routes/reviewRoutes';
 
 // Import routes
 import authRoutes from './routes/authRoutes';
@@ -92,6 +94,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/admin/orders', adminOrderRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
+app.use('/api/products', productStatsRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // 404 handler
 app.use((req: Request, res: Response) => {

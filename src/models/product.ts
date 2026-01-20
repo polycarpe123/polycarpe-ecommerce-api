@@ -18,12 +18,15 @@ const ProductSchema = new Schema<IProduct>(
     name: {
       type: String,
       required: [true, 'Product name is required'],
-      trim: true
+      trim: true,
+      index: true,
+      minlength: [2, 'Product name must be at least 2 characters']
     },
     price: {
       type: Number,
       required: [true, 'Price is required'],
-      min: [0, 'Price cannot be negative']
+      min: [0, 'Price cannot be negative'],
+      index: true
     },
     description: {
       type: String,
@@ -37,7 +40,8 @@ const ProductSchema = new Schema<IProduct>(
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: 'Category',
-      required: [true, 'Category is required']
+      required: [true, 'Category is required'],
+      index: true
     },
     inStock: {
       type: Boolean,
@@ -48,6 +52,7 @@ const ProductSchema = new Schema<IProduct>(
       type: Number,
       required: [true, 'Quantity is required'],
       min: [0, 'Quantity cannot be negative'],
+      
       default: 0
     },
     createdBy: {
@@ -61,10 +66,14 @@ const ProductSchema = new Schema<IProduct>(
   }
 );
 
-// Indexes for faster queries
-ProductSchema.index({ categoryId: 1 });
-ProductSchema.index({ price: 1 });
-ProductSchema.index({ inStock: 1 });
+// Compound indexes
+ProductSchema.index({ categoryId: 1, inStock: 1 });
+ProductSchema.index({ price: 1, createdAt: -1 });
+
+// Text index for search
+ProductSchema.index({ name: 'text', description: 'text' });
+
+
 
 export const Product = mongoose.model<IProduct>('Product', ProductSchema);
 

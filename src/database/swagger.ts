@@ -655,6 +655,176 @@ const options: swaggerJsdoc.Options = {
           }
         }
       },
+      Review: {
+          type: 'object',
+          required: ['_id', 'productId', 'userId', 'rating', 'comment', 'createdAt', 'updatedAt'],
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Review ID',
+              example: '507f1f77bcf86cd799439011'
+            },
+            productId: {
+              type: 'string',
+              description: 'Product ID',
+              example: '507f191e810c19729de860ea'
+            },
+            userId: {
+              type: 'string',
+              description: 'User ID who wrote the review',
+              example: '507f191e810c19729de860eb'
+            },
+            rating: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 5,
+              description: 'Rating from 1 to 5',
+              example: 5
+            },
+            comment: {
+              type: 'string',
+              description: 'Review comment',
+              example: 'Excellent product! Highly recommended.'
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Review creation timestamp'
+            },
+            updatedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last update timestamp'
+            }
+          }
+        },
+        ReviewWithUser: {
+          allOf: [
+            { $ref: '#/components/schemas/Review' },
+            {
+              type: 'object',
+              properties: {
+                userId: {
+                  type: 'object',
+                  description: 'Populated user information',
+                  properties: {
+                    _id: { type: 'string', example: '507f191e810c19729de860eb' },
+                    email: { type: 'string', example: 'customer@example.com' },
+                    firstName: { type: 'string', example: 'John' },
+                    lastName: { type: 'string', example: 'Doe' }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        ReviewWithProduct: {
+          allOf: [
+            { $ref: '#/components/schemas/Review' },
+            {
+              type: 'object',
+              properties: {
+                productId: {
+                  type: 'object',
+                  description: 'Populated product information',
+                  properties: {
+                    _id: { type: 'string', example: '507f191e810c19729de860ea' },
+                    name: { type: 'string', example: 'iPhone 15 Pro' },
+                    price: { type: 'number', example: 999.99 },
+                    description: { type: 'string', example: 'Latest Apple smartphone' }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        CreateReviewRequest: {
+          type: 'object',
+          required: ['productId', 'rating', 'comment'],
+          properties: {
+            productId: {
+              type: 'string',
+              description: 'Product ID to review',
+              example: '507f191e810c19729de860ea'
+            },
+            rating: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 5,
+              description: 'Rating from 1 to 5',
+              example: 5
+            },
+            comment: {
+              type: 'string',
+              minLength: 10,
+              description: 'Review comment (minimum 10 characters)',
+              example: 'This is an excellent product. I highly recommend it!'
+            }
+          }
+        },
+        
+        // PRODUCT STATS SCHEMAS
+        ProductStats: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'string',
+              description: 'Category ID',
+              example: '507f1f77bcf86cd799439011'
+            },
+            totalProducts: {
+              type: 'integer',
+              description: 'Total number of products in category',
+              example: 25
+            },
+            avgPrice: {
+              type: 'number',
+              description: 'Average product price',
+              example: 599.99
+            },
+            minPrice: {
+              type: 'number',
+              description: 'Minimum product price',
+              example: 29.99
+            },
+            maxPrice: {
+              type: 'number',
+              description: 'Maximum product price',
+              example: 2499.99
+            },
+            totalStock: {
+              type: 'integer',
+              description: 'Total stock quantity',
+              example: 450
+            }
+          }
+        },
+        PriceDistribution: {
+          type: 'object',
+          properties: {
+            _id: {
+              type: 'number',
+              description: 'Price range lower bound',
+              example: 0
+            },
+            count: {
+              type: 'integer',
+              description: 'Number of products in this price range',
+              example: 15
+            },
+            products: {
+              type: 'array',
+              description: 'Products in this price range',
+              items: {
+                type: 'object',
+                properties: {
+                  name: { type: 'string', example: 'AirTag' },
+                  price: { type: 'number', example: 29.99 }
+                }
+              }
+            }
+          }
+        },
       responses: {
         UnauthorizedError: {
           description: 'Authentication token is missing or invalid',
@@ -711,7 +881,7 @@ const options: swaggerJsdoc.Options = {
               }
             }
           }
-        }
+        },
       }
     },
     tags: [
@@ -746,6 +916,48 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'File Upload',
         description: 'File upload and management endpoints'
+      },
+
+      // additional tags...
+      {
+        name: 'Authentication',
+        description: 'User authentication and account management'
+      },
+      {
+        name: 'Users',
+        description: 'User management (Admin only)'
+      },
+      {
+        name: 'Categories',
+        description: 'Product categories management'
+      },
+      {
+        name: 'Products',
+        description: 'Products management'
+      },
+      {
+        name: 'Cart',
+        description: 'Shopping cart operations'
+      },
+      {
+        name: 'Orders',
+        description: 'Customer order management'
+      },
+      {
+        name: 'Admin - Orders',
+        description: 'Admin order management endpoints'
+      },
+      {
+        name: 'File Upload',
+        description: 'File upload and management endpoints'
+      },
+      {
+        name: 'Reviews',
+        description: 'Product review management'
+      },
+      {
+        name: 'Product Stats',
+        description: 'Product statistics and analytics'
       }
     ]
   },

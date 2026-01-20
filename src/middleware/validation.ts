@@ -315,3 +315,41 @@ export const validateMongoId = (req: Request, res: Response, next: NextFunction)
 
   next();
 };
+
+export const validateReview = (req: Request, res: Response, next: NextFunction): void => {
+  const { productId, rating, comment } = req.body;
+
+  if (!productId) {
+    res.status(400).json({
+      success: false,
+      error: 'Product ID is required'
+    });
+    return;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    res.status(400).json({
+      success: false,
+      error: 'Invalid product ID'
+    });
+    return;
+  }
+
+  if (!rating || rating < 1 || rating > 5) {
+    res.status(400).json({
+      success: false,
+      error: 'Rating must be between 1 and 5'
+    });
+    return;
+  }
+
+  if (!comment || comment.trim().length < 10) {
+    res.status(400).json({
+      success: false,
+      error: 'Comment must be at least 10 characters'
+    });
+    return;
+  }
+
+  next();
+};

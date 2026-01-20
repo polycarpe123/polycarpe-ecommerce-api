@@ -1,21 +1,25 @@
 import { Request, Response } from 'express';
-import { Order, OrderStatus, IOrderItem } from '../models/order.js';
-import { Cart } from '../models/cart.js';
-import { Product } from '../models/product.js';
-import { User } from '../models/user.js';
+import { Order, OrderStatus } from '../models/order';
+import { Cart } from '../models/cart';
+import { Product } from '../models/product';
 import mongoose from 'mongoose';
-import emailService from '../services/emailService.js';
+import emailService from '../services/emailService';
 
-// Customer: Create order from cart - WITH EMAIL NOTIFICATION
+
+// CUSTOMER ENDPOINTS
+// Create order with transaction (ALREADY HAVE - KEEP AS IS)
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const userId = req.userId;
     const { shippingAddress, notes } = req.body;
 
-    // Find user's cart
-    const cart = await Cart.findOne({ userId });
+    const cart = await Cart.findOne({ userId }).session(session);
 
     if (!cart || cart.items.length === 0) {
+      await session.abortTransaction();
       res.status(400).json({
         success: false,
         error: 'Cart is empty. Cannot create order.'
@@ -23,11 +27,11 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // Verify all products still exist and have sufficient stock
     for (const item of cart.items) {
-      const product = await Product.findById(item.productId);
+      const product = await Product.findById(item.productId).session(session);
       
       if (!product) {
+        await session.abortTransaction();
         res.status(404).json({
           success: false,
           error: `Product ${item.productName} no longer exists`
@@ -35,15 +39,8 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
         return;
       }
 
-      if (!product.inStock) {
-        res.status(400).json({
-          success: false,
-          error: `Product ${item.productName} is out of stock`
-        });
-        return;
-      }
-
-      if (product.quantity < item.quantity) {
+      if (!product.inStock || product.quantity < item.quantity) {
+        await session.abortTransaction();
         res.status(400).json({
           success: false,
           error: `Insufficient stock for ${item.productName}. Only ${product.quantity} available.`
@@ -52,8 +49,7 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       }
     }
 
-    // Create order snapshot from cart
-    const orderItems: IOrderItem[] = cart.items.map(item => ({
+    const orderItems = cart.items.map(item => ({
       productId: item.productId.toString(),
       productName: item.productName,
       price: item.price,
@@ -61,48 +57,46 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       subtotal: item.subtotal
     }));
 
-    const newOrder = await Order.create({
-      userId,
-      items: orderItems,
-      total: cart.total,
-      status: OrderStatus.PENDING,
-      shippingAddress: shippingAddress?.trim(),
-      notes: notes?.trim()
-    });
+    const newOrder = (await Order.create(
+      [{
+        userId,
+        items: orderItems,
+        total: cart.total,
+        status: OrderStatus.PENDING,
+        shippingAddress: shippingAddress?.trim(),
+        notes: notes?.trim()
+      }],
+      { session }
+    ))[0] as any;
 
-    // Update product quantities
     for (const item of cart.items) {
-      await Product.findByIdAndUpdate(
-        item.productId,
-        {
-          $inc: { quantity: -item.quantity }
+      const product = await Product.findById(item.productId).session(session);
+      
+      if (product) {
+        product.quantity -= item.quantity;
+        if (product.quantity === 0) {
+          product.inStock = false;
         }
-      );
-
-      const updatedProduct = await Product.findById(item.productId);
-      if (updatedProduct && updatedProduct.quantity === 0) {
-        updatedProduct.inStock = false;
-        await updatedProduct.save();
+        await product.save({ session });
       }
     }
 
-    // Clear the cart
-    await Cart.findByIdAndDelete(cart._id);
+    await Cart.findByIdAndDelete(cart._id).session(session);
+    await session.commitTransaction();
 
-    // Get user details for email
-    const user = await User.findById(userId);
-    if (user) {
-      // Send order confirmation email (non-blocking)
-      emailService.sendOrderConfirmation(
-        user.email,
-        user.firstName,
-        newOrder._id.toString(),
-        newOrder.total,
-        newOrder.items
-      ).catch(err => {
-        console.error('Failed to send order confirmation email:', err);
-        // Email failure doesn't stop order creation
-      });
+    try {
+      const user = await mongoose.model('User').findById(userId);
+      if (user) {
+        await emailService.sendOrderConfirmation(
+          user.email,
+          user.firstName,
+          newOrder._id.toString(),
+          newOrder.total,
+          newOrder.items
+        );
+      }
+    } catch (emailError) {
+      console.error('Failed to send order confirmation email:', emailError);
     }
 
     res.status(201).json({
@@ -111,15 +105,18 @@ export const createOrder = async (req: Request, res: Response): Promise<void> =>
       data: newOrder
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error('Create order error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to create order'
     });
+  } finally {
+    session.endSession();
   }
 };
 
-// Customer: Get all own orders
+// Get all user's orders 
 export const getMyOrders = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.userId;
@@ -148,7 +145,7 @@ export const getMyOrders = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-// Customer: Get single own order
+// Get single user order
 export const getMyOrder = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.userId;
@@ -185,13 +182,17 @@ export const getMyOrder = async (req: Request, res: Response): Promise<void> => 
   }
 };
 
-// Customer: Cancel own pending order
+// Cancel order with transaction 
 export const cancelMyOrder = async (req: Request, res: Response): Promise<void> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const userId = req.userId;
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
+      await session.abortTransaction();
       res.status(400).json({
         success: false,
         error: 'Invalid order ID'
@@ -199,9 +200,10 @@ export const cancelMyOrder = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const order = await Order.findOne({ _id: id, userId });
+    const order = await Order.findOne({ _id: id, userId }).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       res.status(404).json({
         success: false,
         error: 'Order not found'
@@ -210,6 +212,7 @@ export const cancelMyOrder = async (req: Request, res: Response): Promise<void> 
     }
 
     if (order.status !== OrderStatus.PENDING) {
+      await session.abortTransaction();
       res.status(400).json({
         success: false,
         error: `Cannot cancel order with status: ${order.status}. Only pending orders can be cancelled.`
@@ -217,19 +220,18 @@ export const cancelMyOrder = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // Restore product quantities
     for (const item of order.items) {
-      await Product.findByIdAndUpdate(
-        item.productId,
-        {
-          $inc: { quantity: item.quantity },
-          inStock: true
-        }
-      );
+      const product = await Product.findById(item.productId).session(session);
+      if (product) {
+        product.quantity += item.quantity;
+        product.inStock = true;
+        await product.save({ session });
+      }
     }
 
     order.status = OrderStatus.CANCELLED;
-    await order.save();
+    await order.save({ session });
+    await session.commitTransaction();
 
     res.status(200).json({
       success: true,
@@ -237,15 +239,20 @@ export const cancelMyOrder = async (req: Request, res: Response): Promise<void> 
       data: order
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error('Cancel order error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to cancel order'
     });
+  } finally {
+    session.endSession();
   }
 };
 
-// Admin: Get all orders
+
+// ADMIN ENDPOINTS
+// Get all orders 
 export const getAllOrders = async (req: Request, res: Response): Promise<void> => {
   try {
     const { status, userId, sortBy = 'createdAt', order = 'desc' } = req.query;
@@ -281,13 +288,17 @@ export const getAllOrders = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-// Admin: Update order status - WITH EMAIL NOTIFICATION
+// Update order status with transaction 
 export const updateOrderStatus = async (req: Request, res: Response): Promise<void> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const { id } = req.params;
     const { status } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
+      await session.abortTransaction();
       res.status(400).json({
         success: false,
         error: 'Invalid order ID'
@@ -296,6 +307,7 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
     }
 
     if (!status || !Object.values(OrderStatus).includes(status)) {
+      await session.abortTransaction();
       res.status(400).json({
         success: false,
         error: `Invalid status. Must be one of: ${Object.values(OrderStatus).join(', ')}`
@@ -303,9 +315,10 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const order = await Order.findById(id).populate('userId');
+    const order = await Order.findById(id).session(session);
 
     if (!order) {
+      await session.abortTransaction();
       res.status(404).json({
         success: false,
         error: 'Order not found'
@@ -313,8 +326,8 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // Prevent updating already delivered or cancelled orders
     if (order.status === OrderStatus.DELIVERED || order.status === OrderStatus.CANCELLED) {
+      await session.abortTransaction();
       res.status(400).json({
         success: false,
         error: `Cannot update order with status: ${order.status}`
@@ -322,34 +335,33 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    // If cancelling, restore product quantities
     if (status === OrderStatus.CANCELLED) {
       for (const item of order.items) {
-        await Product.findByIdAndUpdate(
-          item.productId,
-          {
-            $inc: { quantity: item.quantity },
-            inStock: true
-          }
-        );
+        const product = await Product.findById(item.productId).session(session);
+        if (product) {
+          product.quantity += item.quantity;
+          product.inStock = true;
+          await product.save({ session });
+        }
       }
     }
 
     order.status = status;
-    await order.save();
+    await order.save({ session });
+    await session.commitTransaction();
 
-    // Send status update email (non-blocking)
-    const user = order.userId as any;
-    if (user && user.email) {
-      emailService.sendOrderStatusUpdate(
-        user.email,
-        user.firstName,
-        order._id.toString(),
-        status
-      ).catch(err => {
-        console.error('Failed to send order status update email:', err);
-        // Email failure doesn't stop status update
-      });
+    try {
+      const user = await mongoose.model('User').findById(order.userId);
+      if (user) {
+        await emailService.sendOrderStatusUpdate(
+          user.email,
+          user.firstName,
+          order._id.toString(),
+          status
+        );
+      }
+    } catch (emailError) {
+      console.error('Failed to send status update email:', emailError);
     }
 
     res.status(200).json({
@@ -358,10 +370,13 @@ export const updateOrderStatus = async (req: Request, res: Response): Promise<vo
       data: order
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error('Update order status error:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to update order status'
     });
+  } finally {
+    session.endSession();
   }
 };

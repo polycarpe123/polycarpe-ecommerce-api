@@ -2,40 +2,68 @@ import { Request, Response } from 'express';
 import { Product } from '../models/product';
 import { Category } from '../models/category';
 import { Cart } from '../models/cart';
-import { UserRole } from '../models/user';
+import { User, UserRole } from '../models/user';
 
-// Get all products - PUBLIC
 export const getAllProducts = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { categoryId, inStock, minPrice, maxPrice } = req.query;
+    // PAGINATION
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
 
-    const query: any = {};
-
-    if (categoryId && typeof categoryId === 'string') {
-      query.categoryId = categoryId;
+    // FILTERING
+    const filter: any = {};
+    
+    if (req.query.categoryId) {
+      filter.categoryId = req.query.categoryId;
     }
-
-    if (inStock !== undefined) {
-      query.inStock = inStock === 'true';
+    
+    if (req.query.inStock !== undefined) {
+      filter.inStock = req.query.inStock === 'true';
     }
-
-    if (minPrice || maxPrice) {
-      query.price = {};
-      if (minPrice && typeof minPrice === 'string') {
-        query.price.$gte = parseFloat(minPrice);
+    
+    if (req.query.minPrice || req.query.maxPrice) {
+      filter.price = {};
+      if (req.query.minPrice) {
+        filter.price.$gte = parseFloat(req.query.minPrice as string);
       }
-      if (maxPrice && typeof maxPrice === 'string') {
-        query.price.$lte = parseFloat(maxPrice);
+      if (req.query.maxPrice) {
+        filter.price.$lte = parseFloat(req.query.maxPrice as string);
       }
     }
 
-    const products = await Product.find(query)
-      .populate('categoryId', 'name description')
-      .populate('createdBy', 'firstName lastName email role');
+    // SEARCH (using text index)
+    if (req.query.search) {
+      filter.$text = { $search: req.query.search as string };
+    }
+
+    // SORTING
+    const sortBy = req.query.sortBy as string || 'createdAt';
+    const order = req.query.order === 'asc' ? 1 : -1;
+    const sortOptions: any = {};
+    sortOptions[sortBy] = order;
+
+    // Execute query
+    const products = await Product.find(filter)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Get total count for pagination
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / limit);
 
     res.status(200).json({
       success: true,
-      count: products.length,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalProducts,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      },
       data: products
     });
   } catch (error) {
@@ -43,6 +71,59 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
     res.status(500).json({
       success: false,
       error: 'Failed to get products'
+    });
+  }
+};
+
+// Enhanced getAllUsers with pagination and sorting
+export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // PAGINATION
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    const skip = (page - 1) * limit;
+
+    // FILTERING
+    const filter: any = {};
+    if (req.query.role) {
+      filter.role = req.query.role;
+    }
+
+    // SORTING
+    const sortBy = req.query.sortBy as string || 'createdAt';
+    const order = req.query.order === 'asc' ? 1 : -1;
+    const sortOptions: any = {};
+    sortOptions[sortBy] = order;
+
+    // Execute query
+    const users = await User.find(filter)
+      .select('-password')
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Get total count
+    const totalUsers = await User.countDocuments(filter);
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    res.status(200).json({
+      success: true,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalUsers,
+        limit,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      },
+      data: users
+    });
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get users'
     });
   }
 };

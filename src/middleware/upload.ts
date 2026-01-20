@@ -92,13 +92,13 @@ export const uploadProfileImage = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: { fileSize: maxFileSize }
-}).single('profileImage');
+}).single('file');
 
 export const uploadProductImage = multer({
   storage,
   fileFilter: imageFileFilter,
   limits: { fileSize: maxFileSize }
-}).single('productImage');
+}).single('file');
 
 export const uploadMultipleProductImages = multer({
   storage,

@@ -436,6 +436,51 @@ const options: swaggerJsdoc.Options = {
   apis: ['./src/routes/*.ts'] 
 };
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     FileUploadResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         message:
+ *           type: string
+ *           example: "Profile image uploaded successfully"
+ *         data:
+ *           type: object
+ *           properties:
+ *             filename:
+ *               type: string
+ *               example: "1642345678901-profile.jpg"
+ *             originalName:
+ *               type: string
+ *               example: "profile.jpg"
+ *             mimeType:
+ *               type: string
+ *               example: "image/jpeg"
+ *             size:
+ *               type: integer
+ *               example: 245678
+ *             url:
+ *               type: string
+ *               example: "/uploads/profiles/1642345678901-profile.jpg"
+ *
+ *     FileDeleteResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *           example: true
+ *         message:
+ *           type: string
+ *           example: "File deleted successfully"
+ */
+
+
+
 //uncomment when ready
 // //order management schemas
 // /**

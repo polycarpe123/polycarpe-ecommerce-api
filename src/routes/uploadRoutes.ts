@@ -13,6 +13,7 @@ import { authenticate } from '../middleware/auth';
 const router = Router();
 
 // Upload routes (protected)
+
 /**
  * @swagger
  * tags:

@@ -22,13 +22,14 @@ class EmailService {
   }
 
   private async verifyConnection() {
-    try {
-      await this.transporter.verify();
-      console.log('✅ Email service is ready');
-    } catch (error) {
-      console.error('❌ Email service error:', error);
-    }
+  try {
+    await this.transporter.verify();
+    console.log('✅ Email service is ready');
+  } catch (error) {
+    console.error('❌ Email service error:', error);
+    console.error('⚠️  Emails will NOT be sent. Please check your EMAIL_* environment variables');
   }
+}
 
   // Send welcome email
   async sendWelcomeEmail(to: string, firstName: string): Promise<void> {

@@ -54,6 +54,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     // Send welcome email (non-blocking - won't fail registration if email fails)
     emailService.sendWelcomeEmail(newUser.email, newUser.firstName).catch(err => {
       console.error('Failed to send welcome email:', err);
+      console.error('User email:', newUser.email);
       // Email failure doesn't stop registration
     });
 
@@ -418,6 +419,26 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({
       success: false,
       error: 'Failed to delete user'
+    });
+  }
+};
+
+export const testEmail = async (req: Request, res: Response): Promise<void> => {
+  try {
+    await emailService.sendWelcomeEmail(
+      req.body.email || 'test@example.com',
+      'Test User'
+    );
+    res.status(200).json({
+      success: true,
+      message: 'Test email sent successfully'
+    });
+  } catch (error) {
+    console.error('Test email error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to send test email',
+      details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 };

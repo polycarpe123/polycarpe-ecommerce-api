@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './database/swagger';
 import { connectDatabase } from './database/database';
+import emailService from './services/emailService';
 
 // Import routes
 import authRoutes from './routes/authRoutes';

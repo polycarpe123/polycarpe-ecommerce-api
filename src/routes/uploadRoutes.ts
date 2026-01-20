@@ -22,7 +22,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/upload/profile:
+ * /api/upload/profile-image:
  *   post:
  *     summary: Upload user profile image
  *     description: Upload a profile image for the authenticated user
@@ -71,7 +71,7 @@ router.post('/profile-image', authenticate, uploadProfileImage, uploadUserProfil
 
 /**
  * @swagger
- * /api/upload/product:
+ * /api/upload/product-image:
  *   post:
  *     summary: Upload product image
  *     description: Upload an image for a product (Admin/Vendor only)

@@ -43,7 +43,7 @@ router.post('/', authenticate, createReview);
 
 /**
  * @swagger
- * /api/products/{productId}/reviews:
+ * /api/reviews/products/{productId}:
  *   get:
  *     summary: Get all reviews for a product
  *     tags: [Reviews]
@@ -57,11 +57,11 @@ router.post('/', authenticate, createReview);
  *       200:
  *         description: Product reviews with user info
  */
-router.get('/products/:productId/reviews', getProductReviews);
+router.get('/products/:productId', getProductReviews);
 
 /**
  * @swagger
- * /api/users/me/reviews:
+ * /api/reviews/users/me:
  *   get:
  *     summary: Get current user's reviews
  *     tags: [Reviews]
@@ -71,6 +71,6 @@ router.get('/products/:productId/reviews', getProductReviews);
  *       200:
  *         description: User reviews with product info
  */
-router.get('/users/me/reviews', authenticate, getMyReviews);
+router.get('/users/me', authenticate, getMyReviews);
 
 export default router;

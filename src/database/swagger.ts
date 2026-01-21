@@ -917,40 +917,6 @@ const options: swaggerJsdoc.Options = {
         name: 'File Upload',
         description: 'File upload and management endpoints'
       },
-
-      // additional tags...
-      {
-        name: 'Authentication',
-        description: 'User authentication and account management'
-      },
-      {
-        name: 'Users',
-        description: 'User management (Admin only)'
-      },
-      {
-        name: 'Categories',
-        description: 'Product categories management'
-      },
-      {
-        name: 'Products',
-        description: 'Products management'
-      },
-      {
-        name: 'Cart',
-        description: 'Shopping cart operations'
-      },
-      {
-        name: 'Orders',
-        description: 'Customer order management'
-      },
-      {
-        name: 'Admin - Orders',
-        description: 'Admin order management endpoints'
-      },
-      {
-        name: 'File Upload',
-        description: 'File upload and management endpoints'
-      },
       {
         name: 'Reviews',
         description: 'Product review management'

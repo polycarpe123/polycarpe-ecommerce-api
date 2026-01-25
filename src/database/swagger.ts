@@ -62,6 +62,11 @@ const options: swaggerJsdoc.Options = {
               enum: ['admin', 'vendor', 'customer'],
               description: 'User role'
             },
+            profileImage: {
+             type:  'string',
+              example: 'https://example.com/image.jpg',
+              description: 'URL to profile image'
+            },
             createdAt: {
               type: 'string',
               format: 'date-time'
@@ -196,6 +201,10 @@ const options: swaggerJsdoc.Options = {
             },
             description: {
               type: 'string'
+            },
+            image :{
+              type: 'string[]',
+              example: 'https://example.com/image.jpg'
             },
             categoryId: {
               type: 'string'

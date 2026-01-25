@@ -12,7 +12,7 @@ const router = Router();
 
 /**
  * @swagger
- * /api/products/stats:
+ * /api/productsStats/stats:
  *   get:
  *     summary: Get product statistics by category
  *     tags: [Product Stats]
@@ -26,7 +26,7 @@ router.get('/stats', authenticate, requireAdmin, getProductStats);
 
 /**
  * @swagger
- * /api/products/top:
+ * /api/productsStats/top:
  *   get:
  *     summary: Get top products by price
  *     tags: [Product Stats]
@@ -44,7 +44,7 @@ router.get('/top', getTopProducts);
 
 /**
  * @swagger
- * /api/products/low-stock:
+ * /api/productsStats/low-stock:
  *   get:
  *     summary: Get low stock products
  *     tags: [Product Stats]
@@ -64,7 +64,7 @@ router.get('/low-stock', authenticate, requireAdmin, getLowStockProducts);
 
 /**
  * @swagger
- * /api/products/price-distribution:
+ * /api/productsStats/price-distribution:
  *   get:
  *     summary: Get price distribution
  *     tags: [Product Stats]

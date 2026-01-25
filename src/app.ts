@@ -24,7 +24,7 @@ import path from 'path';
 dotenv.config();
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(express.json());
@@ -94,7 +94,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/admin/orders', adminOrderRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
-app.use('/api/products', productStatsRoutes);
+app.use('/api/productsStats', productStatsRoutes);
 app.use('/api/reviews', reviewRoutes);
 
 // 404 handler

@@ -1,8 +1,32 @@
-import { Request, Response } from 'express';
+/// <reference path="../../express.d.ts" />
+import { Request, Response, NextFunction } from 'express';
 import { Product } from '../models/product';
 import { Category } from '../models/category';
 import { Cart } from '../models/cart';
 import { User, UserRole } from '../models/user';
+
+// Helper function to transform product data for frontend
+const transformProduct = (product: any) => {
+  return {
+    id: product._id,
+    name: product.name,
+    slug: product.slug || product.name.toLowerCase().replace(/\s+/g, '-'),
+    sku: product.sku || `PRD-${product._id}`,
+    price: product.price,
+    oldPrice: product.oldPrice || null,
+    description: product.description || '',
+    images: product.images || [],
+    category: product.categoryId?.name || (typeof product.categoryId === 'string' ? product.categoryId : 'Uncategorized'),
+    stock: product.quantity || product.stock || 0,
+    status: product.status || 'active',
+    featured: product.featured || false,
+    rating: product.rating || 0,
+    reviews: product.reviews || 0,
+    tags: product.tags || [],
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt
+  };
+};
 
 export const getAllProducts = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -45,10 +69,14 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
 
     // Execute query
     const products = await Product.find(filter)
+      .populate('categoryId', 'name')
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
       .lean();
+
+    // Transform products for frontend
+    const transformedProducts = products.map(transformProduct);
 
     // Get total count for pagination
     const totalProducts = await Product.countDocuments(filter);
@@ -64,7 +92,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       },
-      data: products
+      data: transformedProducts
     });
   } catch (error) {
     console.error('Get products error:', error);
@@ -147,7 +175,7 @@ export const getProduct = async (req: Request, res: Response): Promise<void> => 
 
     res.status(200).json({
       success: true,
-      data: product
+      data: transformProduct(product)
     });
   } catch (error) {
     console.error('Get product error:', error);
@@ -169,7 +197,7 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    const { name, price, description, categoryId, inStock, quantity } = req.body;
+    const { name, price, description, categoryId, inStock, quantity, featured } = req.body;
 
     // Check if category exists
     const category = await Category.findById(categoryId);
@@ -181,20 +209,27 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    // Generate slug and SKU
+    const slug = req.body.slug || name.toLowerCase().replace(/\s+/g, '-');
+    const sku = req.body.sku || `PRD-${Date.now()}`;
+
     const newProduct = await Product.create({
       name: name.trim(),
+      slug,
+      sku,
       price,
       description: description?.trim(),
       categoryId,
       inStock,
       quantity,
+      featured: featured || false,
       createdBy: req.userId
     });
 
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
-      data: newProduct
+      data: transformProduct(newProduct)
     });
   } catch (error) {
     console.error('Create product error:', error);

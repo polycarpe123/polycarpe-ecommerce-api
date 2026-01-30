@@ -1,3 +1,4 @@
+/// <reference path="../../express.d.ts" />
 import { Request, Response, NextFunction } from 'express';
 import { UserRole } from '../models/user';
 

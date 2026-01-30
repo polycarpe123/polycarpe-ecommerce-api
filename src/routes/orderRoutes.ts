@@ -4,12 +4,12 @@ import {
   getMyOrders,
   getMyOrder,
   cancelMyOrder
-} from '../controllers/orderController.js';
-import { authenticate } from '../middleware/auth.js';
+} from '../controllers/orderController';
+import { authenticate } from '../middleware/auth';
 import {
   validateCreateOrder,
   validateMongoId
-} from '../middleware/validation.js';
+} from '../middleware/validation';
 
 const router = Router();
 

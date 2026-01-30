@@ -2,13 +2,13 @@ import { Router } from 'express';
 import {
   getAllOrders,
   updateOrderStatus
-} from '../controllers/orderController.js';
-import { authenticate } from '../middleware/auth.js';
-import { requireAdmin } from '../middleware/accessControl.js';
+} from '../controllers/orderController';
+import { authenticate } from '../middleware/auth';
+import { requireAdmin } from '../middleware/accessControl';
 import {
   validateOrderStatus,
   validateMongoId
-} from '../middleware/validation.js';
+} from '../middleware/validation';
 
 const router = Router();
 

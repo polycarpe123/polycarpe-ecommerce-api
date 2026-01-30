@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+/// <reference path="../../express.d.ts" />
+import { Request, Response, NextFunction } from 'express';
 import { Cart, ICart, AddToCartDto, UpdateCartItemDto } from '../models/cart';
 import { Product } from '../models/product';
 

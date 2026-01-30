@@ -1,7 +1,8 @@
-import { Request, Response } from 'express';
+/// <reference path="../../express.d.ts" />
+import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import { User, IUser, UserResponse, RegisterDto, LoginDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto, UpdateUserDto, UserRole } from '../models/user.js';
+import { User, IUser, UserResponse, RegisterDto, LoginDto, ChangePasswordDto, ForgotPasswordDto, ResetPasswordDto, UpdateUserDto, UserRole } from '../models/user';
 import { TokenBlacklist } from '../models/TokenBlackList';
 import { generateToken } from '../utility/jwt';
 import emailService from '../services/emailService';

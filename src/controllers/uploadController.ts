@@ -1,4 +1,5 @@
-import { Request, Response } from 'express';
+/// <reference path="../../express.d.ts" />
+import { Request, Response, NextFunction } from 'express';
 import { User } from '../models/user';
 import cloudinary from '../database/cloudinary';
 

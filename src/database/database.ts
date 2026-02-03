@@ -3,13 +3,17 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+// Choose database based on environment
+const MONGODB_URI: string = process.env.NODE_ENV === 'production' 
+  ? process.env.MONGODB_URI_RENDER || 'mongodb://localhost:27017/polycarpe-ecommerce'
+  : process.env.MONGODB_URI_LOCAL || process.env.MONGODB_URI || 'mongodb://localhost:27017/polycarpe-ecommerce';
 
 export const connectDatabase = async (): Promise<void> => {
   try {
     await mongoose.connect(MONGODB_URI);
   
     console.log('MongoDB Connected Successfully');
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`Database: ${mongoose.connection.name}`);
     console.log(`Host: ${mongoose.connection.host}`);
     console.log('\n');

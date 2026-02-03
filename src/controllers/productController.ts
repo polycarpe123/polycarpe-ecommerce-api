@@ -42,6 +42,10 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
       filter.categoryId = req.query.categoryId;
     }
     
+    if (req.query.featured !== undefined) {
+      filter.featured = req.query.featured === 'true';
+    }
+    
     if (req.query.inStock !== undefined) {
       filter.inStock = req.query.inStock === 'true';
     }

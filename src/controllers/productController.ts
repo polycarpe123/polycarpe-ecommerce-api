@@ -4,6 +4,7 @@ import { Product } from '../models/product';
 import { Category } from '../models/category';
 import { Cart } from '../models/cart';
 import { User, UserRole } from '../models/user';
+import { createNotification } from '../utils/notificationUtils';
 
 // Helper function to transform product data for frontend
 const transformProduct = (product: any) => {
@@ -230,6 +231,9 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
       createdBy: req.userId
     });
 
+    // Create notification for new product
+    await createNotification.product.created(name.trim(), newProduct._id.toString());
+
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
@@ -297,6 +301,9 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
     if (quantity !== undefined) product.quantity = quantity;
 
     await product.save();
+
+    // Create notification for product update
+    await createNotification.product.updated(product.name, product._id.toString());
 
     res.status(200).json({
       success: true,

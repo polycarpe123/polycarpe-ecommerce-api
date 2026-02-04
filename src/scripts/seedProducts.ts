@@ -38,6 +38,11 @@ const seedProducts = async () => {
         name: 'iPhone 15 Pro',
         price: 999.99,
         description: 'Latest Apple smartphone with A17 Pro chip',
+        images: [
+          'https://images.unsplash.com/photo-1592286115803-a1c3b552ee43?w=600&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1591337676887-a217a6970a8a?w=600&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1580910051074-3eb694886505?w=600&h=600&fit=crop'
+        ],
         categoryId,
         inStock: true,
         quantity: 50,
@@ -47,6 +52,10 @@ const seedProducts = async () => {
         name: 'MacBook Pro 16"',
         price: 2499.99,
         description: 'Powerful laptop for professionals',
+        images: [
+          'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=600&h=600&fit=crop'
+        ],
         categoryId,
         inStock: true,
         quantity: 25,
@@ -56,6 +65,10 @@ const seedProducts = async () => {
         name: 'AirPods Pro',
         price: 249.99,
         description: 'Wireless earbuds with active noise cancellation',
+        images: [
+          'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=600&h=600&fit=crop',
+          'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=600&h=600&fit=crop'
+        ],
         categoryId,
         inStock: true,
         quantity: 100,

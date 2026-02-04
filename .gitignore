@@ -12,8 +12,7 @@ build/
 *.js.map
 *.d.ts.map
 
-# Environment Variables
-.env
+# Environment Variables (except .env for development)
 .env.local
 .env.development
 .env.test
@@ -87,8 +86,7 @@ lib-cov
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variable files
-.env
+# dotenv environment variable files (except .env for development)
 .env.development.local
 .env.test.local
 .env.production.local

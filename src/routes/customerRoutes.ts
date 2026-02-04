@@ -67,8 +67,24 @@ router.get('/', authenticate, requireAdmin, async (req: Request, res: Response) 
     const limit = parseInt(req.query.limit as string) || 10;
     const skip = (page - 1) * limit;
 
-    // Filtering
-    const filter: any = { role: UserRole.CUSTOMER };
+    // First, get all users who have made orders (regardless of role)
+    const ordersWithUsers = await Order.aggregate([
+      {
+        $group: {
+          _id: '$userId',
+          totalOrders: { $sum: 1 },
+          totalSpent: { $sum: '$total' },
+          lastOrderDate: { $max: '$createdAt' }
+        }
+      }
+    ]);
+
+    console.log('📊 Users with orders:', ordersWithUsers);
+    const userIds = ordersWithUsers.map(item => item._id);
+    console.log('👥 User IDs with orders:', userIds);
+    
+    // Filtering - start with users who have orders
+    let filter: any = { _id: { $in: userIds } };
     
     if (req.query.search) {
       filter.$or = [
@@ -92,12 +108,44 @@ router.get('/', authenticate, requireAdmin, async (req: Request, res: Response) 
       .limit(limit)
       .lean();
 
-    // Get total count
-    const totalCustomers = await User.countDocuments(filter);
+    console.log('🔍 Found customers:', customers.length);
+
+    // Get detailed order information for each customer
+    const customersWithOrders = await Promise.all(
+      customers.map(async (customer) => {
+        // Look for orders using userId
+        const orders = await Order.find({ userId: customer._id })
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .lean();
+
+        const userStats = ordersWithUsers.find(stat => stat._id.toString() === customer._id.toString());
+        
+        return {
+          ...customer,
+          id: customer._id,
+          totalOrders: userStats?.totalOrders || 0,
+          totalSpent: userStats?.totalSpent || 0,
+          lastOrderDate: userStats?.lastOrderDate,
+          orders: orders.map(order => ({
+            id: order._id,
+            orderNumber: order.orderNumber || `ORD-${order._id}`,
+            status: order.status,
+            total: order.total,
+            createdAt: order.createdAt,
+            itemCount: order.items?.length || 0
+          }))
+        };
+      })
+    );
+
+    // Get total count of users with orders
+    const totalCustomers = userIds.length;
     const totalPages = Math.ceil(totalCustomers / limit);
 
     res.status(200).json({
       success: true,
+      customers: customersWithOrders,
       pagination: {
         currentPage: page,
         totalPages,
@@ -105,8 +153,7 @@ router.get('/', authenticate, requireAdmin, async (req: Request, res: Response) 
         limit,
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
-      },
-      data: customers
+      }
     });
   } catch (error) {
     console.error('Get customers error:', error);
@@ -243,7 +290,7 @@ router.get('/:id', authenticate, requireAdmin, async (req: Request, res: Respons
 
     const totalOrders = await Order.countDocuments({ userId: id });
     const totalSpent = await Order.aggregate([
-      { $match: { userId: customer._id, status: { $ne: 'cancelled' } } },
+      { $match: { userId: id, status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$total' } } }
     ]);
 
